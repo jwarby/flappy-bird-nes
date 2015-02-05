@@ -11,7 +11,26 @@ as [FCEUX](http://www.fceux.com).
 ### Assembler
 
 The assembler being used is the somewhat controversial `nesasm` assembler
-(I have version 2.51).
+(I have version 2.51).  To assemble using `nesasm`:
+
+```shell
+  $ cd flappy-bird-nes # if not already in the project directory
+  $ nesasm flappy-bird.asm
+```
+
+`nesasm` doesn't allow you to specify an output file - the generated file will be located wherever you ran `nesasm` from, and will be original filename with a `.nes` extension.  For this reason, you may want to use this command instead (which just simply moves the output file into the `dist` folder):
+
+```shell
+  $ nesasm flappy-bird.asm && mv flappy-bird.nes dist/
+```
+
+**Note:** I had some difficulty locating the Linux version of `nesasm` recently, but found a copy as part of a dev kit [here](http://www.magicengine.com/mkit/download.html).  Once you get the `nesasm` binary, ensure it's in your `$PATH`, and has execute permissions.
+
+### How To Run
+
+Inside the `dist` folder, you will find a `flappy-bird.nes`, which can be run using an emulator.  I use, and have tested the ROM, with [FCEUX](http://www.fceux.com/web/home.html).
+
+For assembling the project yourself, see the section above.
 
 ### Progress
 
