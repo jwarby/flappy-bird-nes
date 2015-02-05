@@ -5,6 +5,7 @@ Entertainment System.  The project can be run through a NES emulator, such
 as [FCEUX](http://www.fceux.com).
 
 ![Flappy Bird NES Screenshots](assets/screenshots.png "Flappy Bird NES Screenshots")
+![Flappy Bird NES Animated Demo](assets/flappy.gif "Flappy Bird NES Animated Demo")
 
 ## Project Details
 
