@@ -57,3 +57,5 @@ NES development (or assembly for that matter), so there will be few (if any)
 occurences of best practices being used in the code.
 - With the above in mind, a great resource for learning NES development is the
 popular [Nerdy Nights tutorials](http://nintendoage.com/forum/messageview.cfm?catid=22&threadid=7155)
+- Known issues:
+  - if the bird goes above the top of the screen, the 'Game Over' state is triggered
