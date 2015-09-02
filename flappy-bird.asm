@@ -207,6 +207,18 @@ Forever:
   ; Check collisions
 CheckCollisions:
   LDA $0200
+  LDX dead
+  CPX #$01
+  BEQ DownOffset
+
+CheckBottomWall:
+
+  CMP #BOTTOMWALL
+  BCS GameOverHere
+
+CheckPipes:
+
+  LDA $0200
   CMP pipeY
   BCC Forever
 
@@ -232,6 +244,17 @@ CheckCollisions:
 
   JMP Forever
 
+DownOffset:
+  CLC
+  ADC #$03
+  JMP CheckBottomWall
+
+GameOverHere:
+  LDA #STATE_GAMEOVER
+  STA current_state
+
+  JMP Forever
+
 ; NMI label - program jumps here on NMI interrupt
 NMI:
   LDA current_state
@@ -246,6 +269,16 @@ GotoGameover:
   LDA buttons
   AND #%00010000
   BNE RestartGame
+
+DrawGameOverMessage:
+  LDX #$00
+
+DrawGameOverLoop:
+  LDA game_over, x
+  STA $0210, x
+  INX
+  CPX #$20
+  BNE DrawGameOverLoop
   JMP LatchControllers
 
 RestartGame:
@@ -447,18 +480,15 @@ DecrementInputTimeout:
 UpdateSpeed:
   ; Check that the animation timeout is 0
   LDA animation_timeout
-  BNE CheckBottomWall
+  BNE Fall
   LDA speed
   CLC
   ADC #GRAVITY
   STA speed
 
 ; Check for collision with bottom wall
-CheckBottomWall:
-  LDA $0200
-  CMP #BOTTOMWALL
-  BCS GameOver
-  ; No collision; initialise x to 0 for fall loop
+Fall:
+  ; initialise x to 0 for fall loop
   LDX #$00
 
 ; Add speed to bird position
@@ -528,23 +558,6 @@ Flap:
 SetInputTimeout:
   LDA #INPUT_TIMEOUT
   STA input_timeout
-  JMP Done
-
-; Game over subroutine
-GameOver:
-  ; Set game over bit
-  LDA #STATE_GAMEOVER
-  STA current_state
-
-DrawGameOverMessage:
-  LDX #$00
-
-DrawGameOverLoop:
-  LDA game_over, x
-  STA $0210, x
-  INX
-  CPX #$20
-  BNE DrawGameOverLoop
   JMP Done
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
