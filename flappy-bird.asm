@@ -24,6 +24,9 @@ input_timeout     .rs 1   ; delay user input
 buttons           .rs 1   ; store button input as 1s and 0s
 current_state     .rs 1   ; current state of game (e.g. playing, game over, etc)
 direction         .rs 1   ; direction in pre_gameplay state (0: up, 1: down)
+pipeX             .rs 1
+pipeY             .rs 1
+dead              .rs 1
 
 ; Constants
 GRAVITY           = $01   ; gravity value
@@ -183,6 +186,7 @@ InitVariables:
   STA animation_timeout
   STA speed
   STA direction
+  STA dead
   ; Set current state to the playing state
   LDA #STATE_PREGAMEPLAY
   STA current_state
@@ -190,8 +194,42 @@ InitVariables:
   LDA #$20
   STA input_timeout
 
+  LDA #$80
+  STA pipeX
+  LDA #$90
+  STA pipeY
+
+; @TODO!!!!!
+
 ; Infinite loop to keep the game running
 Forever:
+
+  ; Check collisions
+CheckCollisions:
+  LDA $0200
+  CMP pipeY
+  BCC Forever
+
+  ; Set boolean 'dead' to 1
+  LDA #$01
+  STA dead
+
+  ; Change sprite to downward facing one
+  LDA #$20
+  STA $0201
+  LDA #$21
+  STA $0205
+  LDA #$30
+  STA $0209
+  LDA #$31
+  STA $020d
+
+  ; Set correct palettes for bottom 2 sprites
+  LDA #$01
+  STA $020a
+  LDA #$00
+  STA $020e
+
   JMP Forever
 
 ; NMI label - program jumps here on NMI interrupt
@@ -218,6 +256,18 @@ RestartGame:
 
 ; Advance the scroll variable
 ScrollPlaying:
+
+  ; @TODO PIPE STUFF
+  LDA pipeX
+  STA $0213
+  LDA pipeY
+  STA $0210
+  LDA #$06
+  STA $0211
+  LDA #$00
+  STA $0212
+  DEC pipeX
+
   INC scroll
   JSR CheckAnimate
   JMP CheckInputTimeout
@@ -239,6 +289,7 @@ CheckAnimate:
 ; Moves the bird animation to the next set of sprites in the sequence,
 ; or resets to 0 if currently on last set of animation sprites
 Animate:
+
   LDX #$00
   LDA $0201
   CMP #$04                        ; check the first sprite's tile number
@@ -248,6 +299,7 @@ Animate:
 ; Loop to set all sprite tiles to the next sprite in the animation
 ; sequence
 AdvanceAnimationFrame:
+
   ; Add 2 to current tile number
   LDA $0201, x
   CLC
@@ -459,6 +511,10 @@ Done:
 
 ; Flap subroutine - triggered by user pressing A button
 Flap:
+  LDA dead
+  CMP #$01
+  BEQ Done
+
   ; Check the input timeout and go to done if it hasn't timed out yet
   LDA input_timeout
   BNE Done
