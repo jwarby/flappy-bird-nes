@@ -25,11 +25,11 @@ buttons           .rs 1   ; store button input as 1s and 0s
 current_state     .rs 1   ; current state of game (e.g. playing, game over, etc)
 direction         .rs 1   ; direction in pre_gameplay state (0: up, 1: down)
 pipeX             .rs 1
-pipeY             .rs 1
 dead              .rs 1
+temp              .rs 1
 
 ; Constants
-GRAVITY           = $01   ; gravity value
+GRAVITY           = $00   ; gravity value
 FLAP_POWER        = $02   ; power of flap
 BOTTOMWALL        = $B9   ; bottom boundary
 ANIMATION_TIMEOUT = $05   ; animation timeout
@@ -194,37 +194,66 @@ InitVariables:
   LDA #$20
   STA input_timeout
 
-  LDA #$80
+  LDA #$00
   STA pipeX
-  LDA #$90
-  STA pipeY
 
-; @TODO!!!!!
 
 ; Infinite loop to keep the game running
 Forever:
 
   ; Check collisions
 CheckCollisions:
-  LDA $0200
-  LDX dead
-  CPX #$01
+  LDA dead
+  CMP #$01
   BEQ DownOffset
 
 CheckBottomWall:
-
+  LDA $0200       ; Bird's y position
   CMP #BOTTOMWALL
   BCS GameOverHere
 
 CheckPipes:
+  LDA current_state
+  CMP #STATE_PLAYING
+  BNE Forever
 
-  LDA $0200
-  CMP pipeY
+  ; if bird.x2 < pipe.x
+  LDA $0203
+  CLC
+  ADC #$10
+  CMP pipeX
   BCC Forever
 
+  ; if bird.y2 < pipe.y
+  LDA $0200
+  CLC
+  ADC #$10
+  CMP $0210
+  BCC Forever
+
+  ; if pipe.x2 < bird.x
+  LDA pipeX
+  CLC
+  ADC #$08
+  CMP $0203
+  BCC Forever
+
+CheckPipes2:
+
+  ; if pipe.y2 < bird.y
+  LDA $0210
+  CLC
+  ADC #$28
+  CMP $0200
+  BCC Forever
+
+KillIt:
   ; Set boolean 'dead' to 1
   LDA #$01
   STA dead
+
+  LDA #$01
+  STA speed
 
   ; Change sprite to downward facing one
   LDA #$20
@@ -259,11 +288,19 @@ GameOverHere:
 NMI:
   LDA current_state
   CMP #STATE_PREGAMEPLAY
-  BEQ ScrollPreGameplay
+  BEQ GoToScrollPreGameplay
   CMP #STATE_PLAYING
-  BEQ ScrollPlaying               ; if not, continue scrolling
+  BEQ GoToScrollPlaying               ; if not, continue scrolling
   CMP #STATE_GAMEOVER
   BEQ GotoGameover                ; otherwise go to check bottom wall collision
+
+; @HACK to get around branch index out-of-range error
+GoToScrollPlaying:
+  JMP ScrollPlaying
+
+; @HACK to get around branch index out-of-range error
+GoToScrollPreGameplay:
+  JMP ScrollPreGameplay
 
 GotoGameover:
   LDA buttons
@@ -290,21 +327,47 @@ RestartGame:
 ; Advance the scroll variable
 ScrollPlaying:
 
+LoadPipe:
+  LDX #$00
+
+LoadPipeLoop:
+  LDA pipe, x
+
+  STA $0210, x
+
+  INX
+  CPX #$28
+  BNE LoadPipeLoop
+
+SetPipeX:
+
   ; @TODO PIPE STUFF
   LDA pipeX
   STA $0213
-  LDA pipeY
-  STA $0210
-  LDA #$06
-  STA $0211
-  LDA #$00
-  STA $0212
-  DEC pipeX
+  STA $0217
+  STA $021b
+  STA $021f
+  STA $0223
 
-  INC scroll
-  JSR CheckAnimate
+  ; Check if dead
+  LDA dead
+  CMP #$00
+  BEQ DoScroll
+
+  LDA speed
+  CLC
+  ADC #$01
+  STA speed
+
   JMP CheckInputTimeout
 
+DoScroll:
+  DEC pipeX
+  INC scroll
+
+Continue:
+  JSR CheckAnimate
+  JMP CheckInputTimeout
 
 ScrollPreGameplay:
   INC scroll
@@ -753,10 +816,10 @@ palette:
   .db $0F,$1A,$29,$18, $0F,$07,$17,$37, $0F,$2D,$3D,$3C,$0F,$3D,$3E,$0F  ; bg
   .db $22,$3E,$16,$30, $1A,$3E,$16,$27, $0F,$30,$3E,$3E, $0F,$2D,$3D,$3C  ; sprites
 sprites:
-  .db $70, $00, $00, $38
-  .db $70, $01, $00, $40
-  .db $78, $10, $00, $38
-  .db $78, $11, $01, $40
+  .db $50, $00, $00, $38
+  .db $50, $01, $00, $40
+  .db $58, $10, $00, $38
+  .db $58, $11, $01, $40
   ; "PRESS START"
   .db $68, $89, $02, $68
   .db $68, $8B, $02, $70
@@ -780,6 +843,12 @@ game_over:
   .db $70, $8F, $02, $88
   .db $70, $7E, $02, $90
   .db $70, $8B, $02, $98
+pipe:
+  .db $70, $06, $00, $ff
+  .db $78, $06, $00, $ff
+  .db $80, $06, $00, $ff
+  .db $88, $06, $00, $ff
+  .db $90, $06, $00, $ff
 
 columnData:
   .incbin "level.bin"
