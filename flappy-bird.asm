@@ -29,7 +29,7 @@ dead              .rs 1
 temp              .rs 1
 
 ; Constants
-GRAVITY           = $00   ; gravity value
+GRAVITY           = $01   ; gravity value
 FLAP_POWER        = $02   ; power of flap
 BOTTOMWALL        = $B9   ; bottom boundary
 ANIMATION_TIMEOUT = $05   ; animation timeout
@@ -197,6 +197,11 @@ InitVariables:
   LDA #$00
   STA pipeX
 
+  JMP Forever
+
+UnPenetrate:
+  LDA #$02
+  STA speed
 
 ; Infinite loop to keep the game running
 Forever:
@@ -207,9 +212,16 @@ CheckCollisions:
   CMP #$01
   BEQ DownOffset
 
+CheckTopWall:
+  LDA $0200
+  CMP #$06
+  BCC UnPenetrate
+  BEQ UnPenetrate
+
 CheckBottomWall:
   LDA $0200       ; Bird's y position
   CMP #BOTTOMWALL
+  BEQ CheckPipes
   BCS GameOverHere
 
 CheckPipes:
@@ -252,7 +264,7 @@ KillIt:
   LDA #$01
   STA dead
 
-  LDA #$01
+  LDA #$04
   STA speed
 
   ; Change sprite to downward facing one
@@ -336,7 +348,7 @@ LoadPipeLoop:
   STA $0210, x
 
   INX
-  CPX #$28
+  CPX #$30
   BNE LoadPipeLoop
 
 SetPipeX:
@@ -348,6 +360,15 @@ SetPipeX:
   STA $021b
   STA $021f
   STA $0223
+  STA $0227
+  CLC
+  ADC #$08
+  STA $022b
+  STA $022f
+  STA $0233
+  STA $0237
+  STA $023b
+  STA $023f
 
   ; Check if dead
   LDA dead
@@ -814,12 +835,12 @@ DrawNewAttributesLoopDone:
   .org $E000
 palette:
   .db $0F,$1A,$29,$18, $0F,$07,$17,$37, $0F,$2D,$3D,$3C,$0F,$3D,$3E,$0F  ; bg
-  .db $22,$3E,$16,$30, $1A,$3E,$16,$27, $0F,$30,$3E,$3E, $0F,$2D,$3D,$3C  ; sprites
+  .db $22,$3E,$16,$30, $1A,$3E,$16,$27, $0F,$30,$3E,$3E, $0f,$0a,$1a,$2a  ; sprites
 sprites:
-  .db $50, $00, $00, $38
-  .db $50, $01, $00, $40
-  .db $58, $10, $00, $38
-  .db $58, $11, $01, $40
+  .db $70, $00, $00, $38
+  .db $70, $01, $00, $40
+  .db $78, $10, $00, $38
+  .db $78, $11, $01, $40
   ; "PRESS START"
   .db $68, $89, $02, $68
   .db $68, $8B, $02, $70
@@ -844,11 +865,19 @@ game_over:
   .db $70, $7E, $02, $90
   .db $70, $8B, $02, $98
 pipe:
-  .db $70, $06, $00, $ff
-  .db $78, $06, $00, $ff
-  .db $80, $06, $00, $ff
-  .db $88, $06, $00, $ff
-  .db $90, $06, $00, $ff
+  .db $97, $16, $03, $ff
+  .db $9f, $06, $03, $ff
+  .db $a7, $06, $03, $ff
+  .db $af, $06, $03, $ff
+  .db $B7, $06, $03, $ff
+  .db $bf, $06, $03, $ff
+
+  .db $97, $17, $03, $f7
+  .db $9f, $07, $03, $f7
+  .db $A7, $07, $03, $f7
+  .db $Af, $07, $03, $f7
+  .db $B7, $07, $03, $f7
+  .db $Bf, $07, $03, $f7
 
 columnData:
   .incbin "level.bin"
