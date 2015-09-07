@@ -232,7 +232,7 @@ CheckPipes:
   ; if bird.x2 < pipe.x
   LDA $0203
   CLC
-  ADC #$10
+  ADC #$0D      ; sprite is 16px wide, but we make the bounding box 14px
   CMP pipeX
   BCC Forever
 
@@ -321,6 +321,16 @@ GotoGameover:
 
 DrawGameOverMessage:
   LDX #$00
+  LDA #$FE
+
+ClearPipeLoop:
+  STA $0210, x
+
+  INX
+  CPX #$50
+  BNE ClearPipeLoop
+
+  LDX #$00
 
 DrawGameOverLoop:
   LDA game_over, x
@@ -348,7 +358,7 @@ LoadPipeLoop:
   STA $0210, x
 
   INX
-  CPX #$30
+  CPX #$50
   BNE LoadPipeLoop
 
 SetPipeX:
@@ -361,14 +371,24 @@ SetPipeX:
   STA $021f
   STA $0223
   STA $0227
-  CLC
-  ADC #$08
   STA $022b
   STA $022f
   STA $0233
   STA $0237
+
+  CLC
+  ADC #$08
   STA $023b
   STA $023f
+  STA $0243
+  STA $0247
+  STA $024b
+  STA $024f
+  STA $0253
+  STA $0257
+  STA $025b
+  STA $025f
+
 
   ; Check if dead
   LDA dead
@@ -865,14 +885,22 @@ game_over:
   .db $70, $7E, $02, $90
   .db $70, $8B, $02, $98
 pipe:
-  .db $97, $16, $03, $ff
+  .db $77, $16, $03, $ff
+  .db $7f, $06, $03, $ff
+  .db $87, $06, $03, $ff
+  .db $8f, $06, $03, $ff
+  .db $97, $06, $03, $ff
   .db $9f, $06, $03, $ff
   .db $a7, $06, $03, $ff
   .db $af, $06, $03, $ff
   .db $B7, $06, $03, $ff
   .db $bf, $06, $03, $ff
 
-  .db $97, $17, $03, $f7
+  .db $77, $17, $03, $f7
+  .db $7f, $07, $03, $f7
+  .db $87, $07, $03, $f7
+  .db $8f, $07, $03, $f7
+  .db $97, $07, $03, $f7
   .db $9f, $07, $03, $f7
   .db $A7, $07, $03, $f7
   .db $Af, $07, $03, $f7

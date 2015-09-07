@@ -3,4 +3,3 @@
 - Use background tiles for text ('Press 'A' to flap!')
 - Title screen, with fade to black (or white!)
 - Tidy up hacks and crappy naming & organisation
-- Hide pipe sprites on game over
