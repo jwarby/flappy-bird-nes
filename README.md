@@ -12,18 +12,17 @@ as [FCEUX](http://www.fceux.com).
 ### Assembler
 
 The assembler being used is the somewhat controversial `nesasm` assembler
-(I have version 2.51).  To assemble using `nesasm`:
+(I have version 2.51).  Assuming `nesasm` is available on your `$PATH`, run the following to assemble the project:
 
-```shell
-  $ cd flappy-bird-nes # if not already in the project directory
-  $ nesasm flappy-bird.asm
+```bash
+cd src/
+make
 ```
 
-`nesasm` doesn't allow you to specify an output file - the generated file will be located wherever you ran `nesasm` from, and will be original filename with a `.nes` extension.  For this reason, you may want to use this command instead (which just simply moves the output file into the `dist` folder):
+This will create the file `flappy-bird.nes` in the `dist/` directory.
 
-```shell
-  $ nesasm flappy-bird.asm && mv flappy-bird.nes dist/
-```
+To make and run the project in one step, you can use `make run`, but you will need to have [`fceuxdsp`](http://www.romhacking.net/utilities/256/) on your `$PATH`.  You could of course edit `Makefile` to
+use your preferred emulator if you wish.
 
 **Note:** I had some difficulty locating the Linux version of `nesasm` recently, but found a copy as part of a dev kit [here](http://www.magicengine.com/mkit/download.html).  Once you get the `nesasm` binary, ensure it's in your `$PATH`, and has execute permissions.
 
@@ -43,11 +42,14 @@ The project so far:
     - an animated bird
     - gravity
     - ability to flap - press 'A'
-    - a game over state - currently only triggered when the bird wipes out by
-      ploughing into the ground
+    - a single pipe which scrolls with the background
+      - this is implemented using sprites at present, but would be better if the background tiles could be swapped around - this would allow many more pipes (theoretically the entire screen could be filled with pipes).
+    - a game over state, which is triggered when the bird wipes out by
+      ploughing into the ground, or hits the pipe
 - There is not:
-    - any pipes to avoid
     - sound
+    - multiple pipes
+    - title screen
 
 ## Notes
 
@@ -59,4 +61,4 @@ occurences of best practices being used in the code.
 - With the above in mind, a great resource for learning NES development is the
 popular [Nerdy Nights tutorials](http://nintendoage.com/forum/messageview.cfm?catid=22&threadid=7155)
 - Known issues:
-  - if the bird goes above the top of the screen, the 'Game Over' state is triggered
+  - there's a bug with the code that bounces the bird off the top of the screen - sometimes, the bird's downward speed will increase exponentially and cause it to slam into the ground
